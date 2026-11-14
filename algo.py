@@ -1,3 +1,9 @@
+import matplotlib
+matplotlib.use('Agg')  # Évite les erreurs de thread Tkinter
+
+import warnings
+warnings.filterwarnings("ignore")
+
 import itertools
 import os
 import shutil
@@ -14,8 +20,7 @@ def generate_instances_varying_turbines(
     step=5,
 ):
     """Génère des dossiers d'instances pour différentes valeurs de nb_wt
-
-    avec leur fichier param.txt et x0.txt admissible.
+    en optimisant le placement initial via la combinaison Grille + CMA-ES.
     """
     # 1. Lecture des métadonnées du fichier source
     (
@@ -46,14 +51,28 @@ def generate_instances_varying_turbines(
     for nb_wt in range(min_turbines, max_turbines + 1, step):
         target_dir = os.path.join(output_root, f"instance_{nb_wt}_wt")
         os.makedirs(target_dir, exist_ok=True)
-        print(f"--- Génération de la solution initiale pour {nb_wt} éoliennes ---")
 
-       # Génération via la méthode de la grille géométrique
-        x, y = init_sol.initial_sol_grid(
-            nb_wt, buildable_zone, diameter, lb, ub
+        # Écriture préalable du fichier param.txt pour l'instance courante
+        new_param_lines = param_lines.copy()
+        tag = param_lines[0].split()[0]
+        new_param_lines[0] = f"{tag} {nb_wt}"
+
+        param_file_path = os.path.join(target_dir, "param.txt")
+        with open(param_file_path, "w") as f:
+            f.write("\n".join(new_param_lines) + "\n")
+
+        # Optimisation initiale
+        x, y = init_sol.initial_sol_nomad(
+            nb_wt,
+            buildable_zone,
+            diameter,
+            lb,
+            ub,
+            spacing=True,
+            param_file_path=param_file_path,
         )
 
-        # Vérification de faisabilité géométrique
+        # Vérification de la faisabilité géométrique
         sum_dist = cst.placing_constraint(x, y, buildable_zone)
         s_d = cst.spacing_constraint_min(x, y, diameter)
         print(
@@ -68,23 +87,13 @@ def generate_instances_varying_turbines(
         with open(x0_file_path, "w") as f:
             f.write(str(x0))
 
-        # Mise à jour et écriture du param.txt (la ligne 0 contient le nombre d'éoliennes)
-        new_param_lines = param_lines.copy()
-        tag = param_lines[0].split()[0]
-        new_param_lines[0] = f"{tag} {nb_wt}"
-
-        param_file_path = os.path.join(target_dir, "param.txt")
-        with open(param_file_path, "w") as f:
-            f.write("\n".join(new_param_lines) + "\n")
-
-    print(f"\nToutes les instances ont été générées dans : {output_root}")
+    print(f"\nToutes les instances ont été générées avec succès dans : {output_root}")
 
 if __name__ == "__main__":
-    # Ajuste le paramètre step (ex. step=5 ou step=10) selon le nombre de cas voulus
     generate_instances_varying_turbines(
         base_param_path="instances/1/param.txt",
         output_root="instances_varying",
-        min_turbines=20,
-        max_turbines=70,
-        step=5,
+        min_turbines=100,
+        max_turbines=101,
+        step=1,
     )

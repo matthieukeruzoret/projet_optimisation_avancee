@@ -34,7 +34,6 @@ En plus du cœur d'évaluation boîte noire d'origine, le dépôt intègre déso
 - **`initial_solution.py`** : Implémente le pipeline d'initialisation en deux étapes :
   1. `initial_sol_grid` : Discrétise la zone constructible par une grille régulière adaptative (espacement initial de $5D$, réduit progressivement si nécessaire) afin de garantir une faisabilité géométrique immédiate.
   2. `run_cma_es` : Affine les coordonnées via l'algorithme évolutionnaire **CMA-ES** avec pénalisation rapide des contraintes hors PyWake pour maximiser l'AEP initiale.
-- **`glouton.py` & `recuit.py`** : Heuristiques et métaheuristiques (algorithme glouton et recuit simulé) développées pour résoudre le problème de placement.
 - **`plotting_functions.py`** : Outils de visualisation cartographique (zone constructible, zones d'exclusion hachurées, rose des vents / direction dominante, positions des turbines et cartes de sillage).
 
 ---

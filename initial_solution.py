@@ -120,6 +120,7 @@ def run_cma_es(
         'maxfevals': maxfevals,
         'CMA_diagonal': True if nb_wt >= 30 else False,
         'verbose': -9,
+        'seed':42,
     }
 
     es = cma.CMAEvolutionStrategy(x0, sigma0, opts)
